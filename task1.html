@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #app {
+      background: rgba(0,0,0,0.75);
+      padding: 30px;
+      border-radius: 15px;
+      width: 600px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+    button {
+      background: #2575fc;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #1b5fc9;
+    }
+    .options {
+      margin-top: 20px;
+      display: grid;
+      gap: 10px;
+    }
+    .option {
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #444;
+      transition: 0.3s;
+    }
+    .option:hover { background: #555; }
+    .option.correct { background: green; }
+    .option.wrong { background: red; }
+    .hidden { display: none; }
+    #timer { font-weight: bold; margin-bottom: 15px; }
+    #score { font-size: 18px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Home Page -->
+    <div id="home">
+      <h1>Welcome to the Quiz</h1>
+      <p>Answer 25 questions within 50 seconds!</p>
+      <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- Quiz Page -->
+    <div id="quiz" class="hidden">
+      <div id="timer">Time left: 50s</div>
+      <div id="question"></div>
+      <div class="options" id="options"></div>
+      <div id="score"></div>
+      <button onclick="nextQuestion()">Next</button>
+    </div>
+
+    <!-- Result Page -->
+    <div id="result" class="hidden">
+      <h2>Quiz Finished!</h2>
+      <p id="finalScore"></p>
+      <button onclick="restartQuiz()">Restart</button>
+    </div>
+  </div>
+
+  <script>
+    // 25 Questions
+    const questions = [
+      { q: "What is the capital of France?", options: ["Berlin","Madrid","Paris","Rome"], answer: 2 },
+      { q: "2 + 2 * 2 = ?", options: ["6","8","4","2"], answer: 0 },
+      { q: "Which is the largest planet?", options: ["Earth","Mars","Jupiter","Saturn"], answer: 2 },
+      { q: "HTML stands for?", options: ["Hyper Trainer Marking Language","Hyper Text Markup Language","High Text Making Language","Hyper Transfer Markup Language"], answer: 1 },
+      { q: "CSS is mainly used for?", options: ["Data Storage","Styling Web Pages","Networking","Databases"], answer: 1 },
+      { q: "JS stands for?", options: ["JavaSyntax","JavaScript","JustScript","JScript"], answer: 1 },
+      { q: "Which is not a programming language?", options: ["Python","C++","HTML","Java"], answer: 2 },
+      { q: "React is developed by?", options: ["Google","Microsoft","Facebook","Apple"], answer: 2 },
+      { q: "Which tag is used for images?", options: ["<div>","<p>","<img>","<src>"], answer: 2 },
+      { q: "Which is a JavaScript framework?", options: ["Django","Angular","Flask","Laravel"], answer: 1 },
+      { q: "5 * 5 = ?", options: ["20","25","15","10"], answer: 1 },
+      { q: "Which is a backend runtime?", options: ["Node.js","HTML","CSS","Bootstrap"], answer: 0 },
+      { q: "HTTP stands for?", options: ["HyperText Transfer Protocol","Hyper Transfer Text Program","High Transfer Text Protocol","HyperText Transmission Protocol"], answer: 0 },
+      { q: "SQL is used for?", options: ["Styling","Database","Scripting","Animation"], answer: 1 },
+      { q: "Which is a cloud platform?", options: ["AWS","CSS","HTML","Bootstrap"], answer: 0 },
+      { q: "Which one is an OS?", options: ["Linux","MySQL","HTML","CSS"], answer: 0 },
+      { q: "Which company created Windows?", options: ["Google","Apple","Microsoft","IBM"], answer: 2 },
+      { q: "JSON stands for?", options: ["Java Source Object Notation","JavaScript Object Notation","Just Simple Object Notation","Join Syntax of Nodes"], answer: 1 },
+      { q: "Which is not a database?", options: ["MongoDB","MySQL","Oracle","HTML"], answer: 3 },
+      { q: "Which keyword declares a variable in JS?", options: ["var","let","const","All of these"], answer: 3 },
+      { q: "CSS Flexbox is used for?", options: ["Layouts","Databases","Networking","Storage"], answer: 0 },
+      { q: "Which is the lightest metal?", options: ["Iron","Aluminum","Lithium","Copper"], answer: 2 },
+      { q: "Speed of light?", options: ["3x10^8 m/s","5x10^6 m/s","3x10^6 m/s","1x10^5 m/s"], answer: 0 },
+      { q: "Which is not an IDE?", options: ["VS Code","PyCharm","Sublime","Chrome"], answer: 3 },
+      { q: "Who is known as father of computers?", options: ["Charles Babbage","Alan Turing","Newton","Einstein"], answer: 0 }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let timer = 50;
+    let timerInterval;
+
+    const home = document.getElementById("home");
+    const quiz = document.getElementById("quiz");
+    const result = document.getElementById("result");
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const scoreEl = document.getElementById("score");
+    const timerEl = document.getElementById("timer");
+    const finalScoreEl = document.getElementById("finalScore");
+
+    // Start Quiz
+    function startQuiz() {
+      home.classList.add("hidden");
+      quiz.classList.remove("hidden");
+      score = 0;
+      currentIndex = 0;
+      timer = 50;
+      loadQuestion();
+      timerInterval = setInterval(() => {
+        timer--;
+        timerEl.textContent = `Time left: ${timer}s`;
+        if (timer <= 0) endQuiz();
+      }, 1000);
+    }
+
+    // Load Question
+    function loadQuestion() {
+      if (currentIndex >= questions.length) {
+        endQuiz();
+        return;
+      }
+      let q = questions[currentIndex];
+      questionEl.textContent = `Q${currentIndex+1}: ${q.q}`;
+      optionsEl.innerHTML = "";
+      q.options.forEach((opt, i) => {
+        let btn = document.createElement("div");
+        btn.textContent = opt;
+        btn.classList.add("option");
+        btn.onclick = () => checkAnswer(btn, i);
+        optionsEl.appendChild(btn);
+      });
+      scoreEl.textContent = `Score: ${score}`;
+    }
+
+    // Check Answer
+    function checkAnswer(btn, i) {
+      let q = questions[currentIndex];
+      if (i === q.answer) {
+        btn.classList.add("correct");
+        score++;
+      } else {
+        btn.classList.add("wrong");
+      }
+      Array.from(optionsEl.children).forEach(b => b.onclick = null); // lock answers
+      scoreEl.textContent = `Score: ${score}`;
+    }
+
+    // Next Question
+    function nextQuestion() {
+      currentIndex++;
+      loadQuestion();
+    }
+
+    // End Quiz
+    function endQuiz() {
+      clearInterval(timerInterval);
+      quiz.classList.add("hidden");
+      result.classList.remove("hidden");
+      finalScoreEl.textContent = `Your score: ${score} / ${questions.length}`;
+    }
+
+    // Restart
+    function restartQuiz() {
+      result.classList.add("hidden");
+      home.classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>
