@@ -58,3 +58,7 @@ The **Quiz Application** is an interactive web-based app developed using **HTML*
 
 #OUTPUT:
 
+<img width="1905" height="926" alt="Image" src="https://github.com/user-attachments/assets/3c451dd0-3c20-4415-a0bf-9278e54cade8" />
+
+<img width="1910" height="915" alt="Image" src="https://github.com/user-attachments/assets/b2aaf470-c640-47f5-be5c-59b4d20722ca" />
+
